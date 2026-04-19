@@ -93,65 +93,56 @@
             box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
         }
         
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 10000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            animation: fadeIn 0.3s ease-in-out;
-        }
-        
-        .modal-content {
+        .result-page {
             background: white;
-            margin: 15% auto;
-            padding: 40px;
             border-radius: 20px;
-            width: 80%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 50px;
             max-width: 600px;
+            width: 100%;
             text-align: center;
-            animation: slideIn 0.5s ease-in-out;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 1s ease-in-out;
         }
         
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(-50px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .modal-content h2 {
+        .result-page h2 {
             color: #ff6b6b;
-            margin-bottom: 20px;
-            font-size: 2rem;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
         }
         
-        .modal-content p {
+        .result-page p {
             font-size: 18px;
             line-height: 1.8;
             color: #333;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
         }
         
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
+        .share-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 10px;
         }
         
-        .close:hover {
-            color: #ff6b6b;
+        .share-section h3 {
+            color: #555;
+            margin-bottom: 15px;
         }
         
-        .back-button {
+        .share-link {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            word-break: break-all;
+            margin-bottom: 10px;
+        }
+        
+        .copy-button {
             background: linear-gradient(135deg, #4ecdc4, #45b7d1);
             color: white;
             border: none;
-            padding: 10px 25px;
+            padding: 8px 20px;
             border-radius: 20px;
             font-size: 14px;
             font-weight: bold;
@@ -159,7 +150,7 @@
             transition: all 0.3s ease;
         }
         
-        .back-button:hover {
+        .copy-button:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(78, 205, 196, 0.4);
         }
@@ -183,18 +174,21 @@
         }
         
         @media (max-width: 768px) {
-            .container {
+            .container,
+            .result-page {
                 padding: 20px;
             }
             
-            h1 {
+            h1,
+            .result-page h2 {
                 font-size: 2rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- 输入界面 -->
+    <div id="inputContainer" class="container">
         <h1>🎂 生日快乐！🎂</h1>
         
         <form id="birthdayForm">
@@ -210,51 +204,74 @@
             
             <button type="submit">生成祝福</button>
         </form>
-        
-        <!-- 模态框 -->
-        <div id="greetingModal" class="modal">
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <h2>🎁 生日祝福 🎁</h2>
-                <p id="greeting"></p>
-                <button class="back-button" onclick="closeModal()">返回修改</button>
-            </div>
+    </div>
+    
+    <!-- 祝福展示页面 -->
+    <div id="resultContainer" class="result-page" style="display: none;">
+        <h2>🎁 生日祝福 🎁</h2>
+        <p id="greeting"></p>
+        <div class="share-section">
+            <h3>分享链接</h3>
+            <div class="share-link" id="shareLink"></div>
+            <button class="copy-button" onclick="copyLink()">复制链接</button>
         </div>
     </div>
     
     <script>
-        const modal = document.getElementById('greetingModal');
-        const closeBtn = document.getElementsByClassName('close')[0];
+        // 检查URL参数，判断是否为分享链接
+        function checkUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const name = urlParams.get('name');
+            const message = urlParams.get('message');
+            
+            if (name && message) {
+                // 显示结果页面
+                document.getElementById('inputContainer').style.display = 'none';
+                document.getElementById('resultContainer').style.display = 'block';
+                
+                const greeting = document.getElementById('greeting');
+                greeting.innerHTML = `亲爱的 ${decodeURIComponent(name)}：<br><br>${decodeURIComponent(message)}<br><br>祝你生日快乐，天天开心！🎉`;
+                
+                // 生成彩色纸屑
+                createConfetti();
+            }
+        }
         
+        // 表单提交处理
         document.getElementById('birthdayForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const name = document.getElementById('name').value;
             const message = document.getElementById('message').value;
             
-            const greeting = document.getElementById('greeting');
+            // 生成分享链接
+            const shareUrl = `${window.location.origin}${window.location.pathname}?name=${encodeURIComponent(name)}&message=${encodeURIComponent(message)}`;
             
+            // 更新分享链接显示
+            document.getElementById('shareLink').textContent = shareUrl;
+            
+            // 显示结果页面
+            document.getElementById('inputContainer').style.display = 'none';
+            document.getElementById('resultContainer').style.display = 'block';
+            
+            const greeting = document.getElementById('greeting');
             greeting.innerHTML = `亲爱的 ${name}：<br><br>${message}<br><br>祝你生日快乐，天天开心！🎉`;
-            modal.style.display = 'block';
             
             // 生成彩色纸屑
             createConfetti();
         });
         
-        function closeModal() {
-            modal.style.display = 'none';
+        // 复制链接功能
+        function copyLink() {
+            const shareLink = document.getElementById('shareLink').textContent;
+            navigator.clipboard.writeText(shareLink).then(function() {
+                alert('链接已复制到剪贴板！');
+            }, function(err) {
+                alert('复制失败，请手动复制链接');
+            });
         }
         
-        closeBtn.onclick = function() {
-            closeModal();
-        }
-        
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                closeModal();
-            }
-        }
-        
+        // 生成彩色纸屑
         function createConfetti() {
             const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7', '#dfe6e9'];
             
@@ -276,6 +293,9 @@
                 }, 5000);
             }
         }
+        
+        // 页面加载时检查URL参数
+        window.onload = checkUrlParams;
     </script>
 </body>
 </html>
